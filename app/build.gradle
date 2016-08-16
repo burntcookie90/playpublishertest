@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.github.triplet.play'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.1"
+    defaultConfig {
+        applicationId "io.dwak.playpublishertest"
+        minSdkVersion 21
+        targetSdkVersion 24
+        versionCode 3
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(rootProject.ext.signingProps["store"])
+            keyAlias rootProject.ext.signingProps["alias"]
+            storePassword rootProject.ext.signingProps["storePass"]
+            keyPassword rootProject.ext.signingProps["keyPass"]
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:24.1.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
+    testCompile 'junit:junit:4.12'
+}
+
+play {
+    jsonFile = file(rootProject.ext.signingProps["apiKeyFile"])
+}
+
+project.afterEvaluate {
+    def generateReleasePlayResources = project.tasks.getByName("generateReleasePlayResources")
+    generateReleasePlayResources.dependsOn loadWhatsNewFromTransifex
+}
+
+task loadWhatsNewFromTransifex << {
+    String whatsNew = "This is a what's new. Test"
+    File enUsWhatsNew= new File("app/src/main/play/en-US/whatsnew")
+    System.out.println(enUsWhatsNew.path)
+    if(!enUsWhatsNew.exists()){
+        enUsWhatsNew.createNewFile()
+    }
+    PrintWriter writer = new PrintWriter(enUsWhatsNew)
+    writer.println(whatsNew)
+    writer.close()
+}
